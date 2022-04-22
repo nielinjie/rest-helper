@@ -1,5 +1,6 @@
+//NOTE 这里节约不了多少代码，主要是作为一个默认设计模式来被重用。
 interface RestError {
-  code?: string;
+  code?: number;
   message: string;
   type: string;
   instance: string;
@@ -7,12 +8,14 @@ interface RestError {
 }
 type ErrorHandle = (err: Error) => RestError;
 
-export function errors(
-  handle: ErrorHandle,
-  code: number
-): (error: Error, res) => void {
-  return function (err: Error, res) {
-    let errorJson = handle(err);
-    res.status(code).json(errorJson).send();
-  };
+
+export function errorsHandled(logic,errorMap:ErrorHandle){
+  return function(req,res){
+  try{
+    logic(req,res)
+  }catch(err){
+    let errorJson = errorMap(err);
+    res.status(errorJson.code).json(errorJson).send()
+  }
+}
 }
